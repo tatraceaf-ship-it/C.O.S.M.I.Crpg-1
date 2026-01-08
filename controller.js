@@ -1,37 +1,38 @@
-// controller.js
-import { state, updateState } from "./shared-socket.js";
+const socket = io();
 
-window.applyStatus = () => {
-  updateState({
-  ...state,
-  vida: {
-    atual: Number(document.getElementById("vidaAtual").value) || 0,
-    max: Number(document.getElementById("vidaMax").value) || 1
-  },
-  mana: {
-    atual: Number(document.getElementById("manaAtual").value) || 0,
-    max: Number(document.getElementById("manaMax").value) || 1
-  }
-});
-};
+function getValue(id) {
+  return Number(document.getElementById(id).value);
+}
 
-window.rolarDado = () => {
-  const faces = Number(document.getElementById("dadoTipo").value.replace("d",""));
-  const qtd = Number(document.getElementById("dadoQtd").value);
-
-  const resultados = Array.from({ length: qtd }, () =>
-    Math.floor(Math.random() * faces) + 1
-  );
-
-  updateState({
-    dado: {
-      faces,
-      resultados,
-      timestamp: Date.now()
+document.getElementById("apply").onclick = () => {
+  socket.emit("state:update", {
+    vida: {
+      atual: getValue("vidaAtual"),
+      max: getValue("vidaMax")
+    },
+    mana: {
+      atual: getValue("manaAtual"),
+      max: getValue("manaMax")
     }
   });
 };
 
-window.abrirHUD = () => {
-  window.open("/hud.html", "HUD", "width=500,height=300");
+document.getElementById("roll").onclick = () => {
+  const faces = Number(document.getElementById("dice").value);
+  const qty = Number(document.getElementById("qty").value);
+
+  const results = Array.from({ length: qty }, () =>
+    Math.floor(Math.random() * faces) + 1
+  );
+
+  socket.emit("state:update", {
+    dado: {
+      faces,
+      resultados: results
+    }
+  });
+};
+
+document.getElementById("toggleVida").onclick = () => {
+  socket.emit("state:update", { showVidaBar: false });
 };
