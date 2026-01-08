@@ -1,54 +1,34 @@
-// URL do seu site no Render
-const SOCKET_URL = window.location.origin;
-
-export const socket = io(SOCKET_URL);
-
-// pega ID do HUD via ?id=
-export function getHudId() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("id") || "default";
-}
-
-// entrar no canal do HUD
-export function joinHud() {
-  const hudId = getHudId();
-  socket.emit("join-hud", hudId);
-  return hudId;
-}
-
-// enviar atualização
-export function updateHud(hudId, data) {
-  socket.emit("update-hud", { hudId, data });
-}
-
-// enviar resultado de dado
-export function sendRoll(hudId, roll) {
-  socket.emit("roll-result", { hudId, roll });
-}
-// shared-socket.js
 const socket = io();
 
-// ===== ENVIAR ATUALIZAÇÃO DE STATUS =====
+// ===== PEGAR ID DO HUD =====
+const params = new URLSearchParams(window.location.search);
+const HUD_ID = params.get("id") || "default";
+
+socket.emit("join:hud", HUD_ID);
+
+// ===== ENVIAR STATUS =====
 function enviarHUD(data) {
-  socket.emit("hud:update", data);
+  socket.emit("hud:update", {
+    hudId: HUD_ID,
+    data
+  });
 }
 
-// ===== RECEBER ATUALIZAÇÃO =====
+// ===== RECEBER STATUS =====
 socket.on("hud:update", (data) => {
-  if (window.updateHUD) {
-    window.updateHUD(data);
-  }
+  if (window.updateHUD) window.updateHUD(data);
 });
 
-// ===== DADOS =====
-function enviarDado(dado) {
-  socket.emit("dice:roll", dado);
+// ===== ENVIAR DADO =====
+function enviarDado(dice) {
+  socket.emit("dice:roll", {
+    hudId: HUD_ID,
+    dice
+  });
 }
 
-socket.on("dice:roll", (dado) => {
-  if (window.mostrarDado) {
-    window.mostrarDado(dado);
-  }
+// ===== RECEBER DADO =====
+socket.on("dice:roll", (dice) => {
+  if (window.mostrarDado) window.mostrarDado(dice);
 });
-
 
