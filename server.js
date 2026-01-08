@@ -1,99 +1,54 @@
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import path from "path";
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
-
-app.use(express.static("public"));
-
-io.on("connection", (socket) => {
-  socket.on("join-hud", (hudId) => {
-    socket.join(hudId);
-  });
-
-  socket.on("hud-update", ({ hudId, data }) => {
-    io.to(hudId).emit("hud-update", data);
-  });
+const io = new Server(server, {
+  cors: { origin: "*" }
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log("Servidor rodando na porta", PORT);
-});
 
-// ==========================
-// SERVIR ARQUIVOS ESTÁTICOS
-// ==========================
-app.use(express.static(path.join(__dirname, "public")));
+// servir arquivos estáticos
+app.use(express.static("public"));
 
-// ==========================
-// ROTAS HTML (IMPORTANTE)
-// ==========================
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
+// estado global por HUD ID
+const hudState = {};
 
-app.get("/controller", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "controller.html"));
-});
-
-app.get("/hud", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "hud.html"));
-});
-
-app.get("/mestre", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "mestre.html"));
-});
-
-app.get("/ficha", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "ficha.html"));
-});
-
-// ==========================
-// SOCKET.IO (SEU SISTEMA)
-// ==========================
-const characters = {};
-
+// socket
 io.on("connection", socket => {
-  console.log("🔗 Conectado:", socket.id);
+  console.log("🟢 Conectado:", socket.id);
 
-  socket.on("joinCharacter", charId => {
-    socket.join(charId);
+  socket.on("join-hud", hudId => {
+    socket.join(hudId);
 
-    if (characters[charId]) {
-      socket.emit("syncState", characters[charId]);
+    // envia estado atual ao conectar
+    if (hudState[hudId]) {
+      socket.emit("hud-update", hudState[hudId]);
     }
   });
 
-  socket.on("updateState", ({ charId, data }) => {
-    characters[charId] = data;
-    socket.to(charId).emit("stateUpdated", data);
+  socket.on("update-hud", ({ hudId, data }) => {
+    hudState[hudId] = {
+      ...hudState[hudId],
+      ...data
+    };
+
+    io.to(hudId).emit("hud-update", hudState[hudId]);
   });
 
-  socket.on("rollDice", ({ charId, result }) => {
-    socket.to(charId).emit("diceResult", result);
+  socket.on("roll-result", ({ hudId, roll }) => {
+    io.to(hudId).emit("dice-result", roll);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔴 Desconectado:", socket.id);
   });
 });
 
-// ==========================
-const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log("🔥 Servidor rodando na porta", PORT);
+  console.log("🔥 Server rodando na porta", PORT);
 });
-io.on("connection", (socket) => {
-
-  socket.on("joinRoom", (hudId) => {
-    socket.join(hudId);
-    console.log("Socket entrou na sala:", hudId);
-  });
-
-  socket.on("updateHUD", ({ hudId, estado }) => {
-    io.to(hudId).emit("hud:update", estado);
-  });
-
-});
-
-
 
