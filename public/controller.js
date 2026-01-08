@@ -1,42 +1,40 @@
-import { sendToHUD } from "./shared-socket.js";
+import { joinHud, updateHud, sendRoll } from "./shared-socket.js";
 
-const HUD_ID = "leafone"; // 🔥 TROQUE PARA CADA PERSONAGEM
+const hudId = joinHud();
 
-function getValue(id) {
-  return Number(document.getElementById(id).value);
-}
-
+// aplicar vida/mana
 document.getElementById("aplicar").addEventListener("click", () => {
-  const data = {
-    nome: document.getElementById("nome").value,
-    nivel: getValue("nivel"),
-    vidaAtual: getValue("vidaAtual"),
-    vidaMax: getValue("vidaMax"),
-    manaAtual: getValue("manaAtual"),
-    manaMax: getValue("manaMax"),
-  };
+  const vidaAtual = Number(document.getElementById("vidaAtual").value);
+  const vidaMax = Number(document.getElementById("vidaMax").value);
+  const manaAtual = Number(document.getElementById("manaAtual").value);
+  const manaMax = Number(document.getElementById("manaMax").value);
+  const nivel = Number(document.getElementById("nivel").value);
 
-  sendToHUD(HUD_ID, data);
-});
-
-document.getElementById("rolar").addEventListener("click", () => {
-  const tipo = document.getElementById("dado").value;
-  const qtd = Number(document.getElementById("quantidade").value);
-
-  const resultados = [];
-  const faces = Number(tipo.replace("d", ""));
-
-  for (let i = 0; i < qtd; i++) {
-    resultados.push(1 + Math.floor(Math.random() * faces));
-  }
-
-  sendToHUD(HUD_ID, {
-    dado: {
-      tipo,
-      resultados,
-      critico: resultados.includes(faces),
-      falha: resultados.includes(1),
-    },
+  updateHud(hudId, {
+    vidaAtual,
+    vidaMax,
+    manaAtual,
+    manaMax,
+    nivel
   });
 });
 
+// rolar dado
+document.getElementById("rolar").addEventListener("click", () => {
+  const tipo = document.getElementById("tipoDado").value;
+  const qtd = Number(document.getElementById("qtdDado").value);
+
+  const lados = Number(tipo.replace("d", ""));
+  const resultados = [];
+
+  for (let i = 0; i < qtd; i++) {
+    resultados.push(1 + Math.floor(Math.random() * lados));
+  }
+
+  sendRoll(hudId, {
+    tipo,
+    resultados,
+    critico: resultados.includes(lados),
+    falha: resultados.includes(1)
+  });
+});
