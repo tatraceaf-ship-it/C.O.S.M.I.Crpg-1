@@ -40,6 +40,11 @@ io.on("connection", socket => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
 server.listen(PORT, () => {
   console.log("🔥 Servidor rodando na porta", PORT);
 });
+
