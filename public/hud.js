@@ -1,3 +1,5 @@
+const params = new URLSearchParams(window.location.search);
+const HUD_ID = params.get("id") || "default";
 const socket = io();
 
 const vidaBar = document.getElementById("vidaBar");
@@ -54,5 +56,6 @@ setInterval(() => {
     socket.emit("hud:ping");
   }
 }, 3000);
+
 
 
