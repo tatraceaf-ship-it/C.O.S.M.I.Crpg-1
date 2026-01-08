@@ -4,61 +4,43 @@ import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// __dirname para ES Modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
-
-// 🔧 IMPORTANTE: permitir CORS automático do Render
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: "*" }
 });
 
-// Servir arquivos estáticos
+// 🔹 Servir arquivos estáticos
 app.use(express.static(path.join(__dirname, "public")));
 
-// healthcheck iradissimo e radicopolis só pra garantir
-app.get("/health", (_, res) => {
-  res.send("OK");
+// 🔹 ROTA PRINCIPAL → LOGIN
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-const PORT = process.env.PORT || 3000;
+// 🔹 Estado global
+let state = {
+  name: "Leafone",
+  level: 6,
+  vida: { atual: 36, max: 100 },
+  mana: { atual: 15, max: 15 },
+  dado: null,
+  showVidaBar: true
+};
 
-// Estado em memória
-const characters = {};
-
-// SOCKET.IO
+// 🔹 Socket
 io.on("connection", socket => {
-  console.log("🔗 Conectado:", socket.id);
+  socket.emit("state:update", state);
 
-  socket.on("joinCharacter", charId => {
-    socket.join(charId);
-
-    if (characters[charId]) {
-      socket.emit("syncState", characters[charId]);
-    }
-  });
-
-  socket.on("updateState", ({ charId, data }) => {
-    characters[charId] = data;
-    socket.to(charId).emit("stateUpdated", data);
-  });
-
-  socket.on("rollDice", ({ charId, result }) => {
-    socket.to(charId).emit("diceResult", result);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("❌ Desconectado:", socket.id);
+  socket.on("state:update", newState => {
+    state = { ...state, ...newState };
+    io.emit("state:update", state);
   });
 });
 
-
-server.listen(PORT, "0.0.0.0", () => {
-  console.log("🔥 Servidor rodando na porta", PORT);
+server.listen(process.env.PORT || 3000, () => {
+  console.log("Servidor rodando");
 });
