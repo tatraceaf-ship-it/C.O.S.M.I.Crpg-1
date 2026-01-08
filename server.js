@@ -4,37 +4,48 @@ import { Server } from "socket.io";
 import path from "path";
 import { fileURLToPath } from "url";
 
-// dirname para ES Modules
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
+const io = new Server(server);
 
-//  IMPORTANTE: permitir CORS automático do Render
-const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+// ==========================
+// SERVIR ARQUIVOS ESTÁTICOS
+// ==========================
+app.use(express.static(path.join(__dirname, "public")));
+
+// ==========================
+// ROTAS HTML (IMPORTANTE)
+// ==========================
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Servir arquivos estáticos
-app.use(express.static(path.join(_dirname, "public")));
-
-// healthcheck iradissimo e radicopolis só pra garantir
-app.get("/health", (, res) => {
-  res.send("OK");
+app.get("/controller", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "controller.html"));
 });
 
-const PORT = process.env.PORT || 3000;
+app.get("/hud", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "hud.html"));
+});
 
-// Estado em memória
+app.get("/mestre", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "mestre.html"));
+});
+
+app.get("/ficha", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "ficha.html"));
+});
+
+// ==========================
+// SOCKET.IO (SEU SISTEMA)
+// ==========================
 const characters = {};
 
-// SOCKET.IO
 io.on("connection", socket => {
-  console.log(" Conectado:", socket.id);
+  console.log("🔗 Conectado:", socket.id);
 
   socket.on("joinCharacter", charId => {
     socket.join(charId);
@@ -52,13 +63,11 @@ io.on("connection", socket => {
   socket.on("rollDice", ({ charId, result }) => {
     socket.to(charId).emit("diceResult", result);
   });
-
-  socket.on("disconnect", () => {
-    console.log(" Desconectado:", socket.id);
-  });
 });
 
-
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(" Servidor rodando na porta", PORT);
+// ==========================
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log("🔥 Servidor rodando na porta", PORT);
 });
+
