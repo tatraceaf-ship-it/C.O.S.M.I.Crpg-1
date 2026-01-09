@@ -1,5 +1,8 @@
 const socket = io();
 
+// ENTRA NA SALA
+socket.emit("join", "leafone");
+
 function aplicarHUD() {
   socket.emit("updateHud", {
     id: "leafone",
