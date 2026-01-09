@@ -1,37 +1,21 @@
 const express = require("express");
-const http = require("http");
-const path = require("path");
-const { Server } = require("socket.io");
-
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
+const http = require("http").createServer(app);
+const io = require("socket.io")(http);
+
+app.use(express.static("public"));
+
+io.on("connection", socket => {
+  socket.on("join", hudId => {
+    socket.join(hudId);
+  });
+
+  socket.on("updateHud", data => {
+    io.to(data.id).emit("hudUpdate", data);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
-
-// SERVE A PASTA PUBLIC
-app.use(express.static(path.join(__dirname, "public")));
-
-// ROTA RAIZ → LOGIN
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// SOCKET
-io.on("connection", (socket) => {
-  console.log("🟢 Socket conectado:", socket.id);
-
-  socket.on("hud:update", ({ id, data }) => {
-    io.emit(`hud:${id}`, data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log("🔴 Socket saiu:", socket.id);
-  });
-});
-
-server.listen(PORT, () => {
-  console.log("🔥 Server rodando na porta", PORT);
+http.listen(PORT, () => {
+  console.log("Servidor rodando na porta", PORT);
 });
