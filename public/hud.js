@@ -34,3 +34,33 @@ function animarVida(state) {
     bar.classList.add("shake");
   }
 }
+listenHudUpdates((data) => {
+  if (data.vidaAtual !== undefined) {
+    document.getElementById("vida").innerText =
+      `${data.vidaAtual}/${data.vidaMax}`;
+
+    const pct = (data.vidaAtual / data.vidaMax) * 100;
+    document.getElementById("vidaBar").style.width = pct + "%";
+  }
+
+  if (data.manaAtual !== undefined) {
+    document.getElementById("mana").innerText =
+      `${data.manaAtual}/${data.manaMax}`;
+  }
+
+  if (data.nivel !== undefined) {
+    document.getElementById("nivel").innerText = data.nivel;
+  }
+
+  if (data.dado) {
+    const dado = document.getElementById("dado");
+    dado.innerText = data.dado;
+    dado.classList.add("anim-dado");
+
+    setTimeout(() => {
+      dado.classList.remove("anim-dado");
+      dado.innerText = "";
+    }, 15000);
+  }
+});
+
