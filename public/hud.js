@@ -1,30 +1,15 @@
-listenHudUpdates((data) => {
+const socket = io();
 
-  if (data.vidaAtual !== undefined) {
-    document.getElementById("vidaTexto").innerText =
-      `${data.vidaAtual}/${data.vidaMax}`;
+const params = new URLSearchParams(window.location.search);
+const hudId = params.get("id");
 
-    const pct = (data.vidaAtual / data.vidaMax) * 100;
-    document.getElementById("vidaBar").style.width = pct + "%";
-  }
+socket.emit("join", hudId);
 
-  if (data.manaAtual !== undefined) {
-    document.getElementById("manaTexto").innerText =
-      `${data.manaAtual}/${data.manaMax}`;
-  }
-
-  if (data.nivel !== undefined) {
-    document.getElementById("nivel").innerText = data.nivel;
-  }
-
-  if (data.dado) {
-    const el = document.getElementById("dado");
-    el.innerText = data.dado;
-    el.classList.add("dado-anim");
-
-    setTimeout(() => {
-      el.innerText = "";
-      el.classList.remove("dado-anim");
-    }, 15000);
-  }
+socket.on("hudUpdate", data => {
+  document.getElementById("nome").innerText = data.nome;
+  document.getElementById("vida").innerText = `${data.vida}/${data.vidaMax}`;
+  document.getElementById("mana").innerText = `${data.mana}/${data.manaMax}`;
+  document.getElementById("nivel").innerText = data.nivel;
+  document.getElementById("dado").innerText = data.dado ?? "";
 });
+
