@@ -1,23 +1,31 @@
 const socket = io();
 
-const ID = new URLSearchParams(location.search).get("id") || "default";
-
-function enviarEstado() {
+function aplicar() {
   const state = {
+    name: document.getElementById("nome")?.value || "Nome",
+    level: Number(document.getElementById("nivel")?.value || 6),
+
     vidaAtual: Number(document.getElementById("vidaAtual").value),
     vidaMax: Number(document.getElementById("vidaMax").value),
+
     manaAtual: Number(document.getElementById("manaAtual").value),
     manaMax: Number(document.getElementById("manaMax").value),
-    nivel: Number(document.getElementById("nivel").value),
-    dado: window.lastRoll || null
+
+    diceResult: null,
+    showBar: true
   };
 
-  socket.emit("controller:update", { id: ID, data: state });
+  localStorage.setItem("COSMIC_STATE", JSON.stringify(state));
+  socket.emit("state:update", state);
 }
 
-document.getElementById("aplicar").onclick = enviarEstado;
-document.getElementById("rolar").onclick = () => {
-  window.lastRoll = Math.floor(Math.random() * 20) + 1;
-  enviarEstado();
-};
+function rolarDado() {
+  const sides = Number(document.getElementById("diceType").value.replace("d", ""));
+  const result = Math.floor(Math.random() * sides) + 1;
 
+  const state = JSON.parse(localStorage.getItem("COSMIC_STATE"));
+  state.diceResult = result;
+
+  localStorage.setItem("COSMIC_STATE", JSON.stringify(state));
+  socket.emit("state:update", state);
+}
