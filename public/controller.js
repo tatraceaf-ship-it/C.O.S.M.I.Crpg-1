@@ -2,13 +2,17 @@ const socket = io();
 
 function aplicarHUD() {
   socket.emit("updateHud", {
-    id: "leafone", // HUD alvo
+    id: "leafone",
+
     name: nome.value,
     level: nivel.value,
-    vidaAtual: vidaAtual.value,
-    vidaMax: vidaMax.value,
-    manaAtual: manaAtual.value,
-    manaMax: manaMax.value,
+
+    vidaAtual: Number(vidaAtual.value),
+    vidaMax: Number(vidaMax.value),
+
+    manaAtual: Number(manaAtual.value),
+    manaMax: Number(manaMax.value),
+
     showVidaBar: true,
     dice: { rolls: [] }
   });
