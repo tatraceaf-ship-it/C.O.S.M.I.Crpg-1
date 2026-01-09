@@ -11,27 +11,27 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 
-// arquivos públicos
+// SERVE A PASTA PUBLIC
 app.use(express.static(path.join(__dirname, "public")));
 
-// rota raiz
+// ROTA RAIZ → LOGIN
 app.get("/", (req, res) => {
-  res.redirect("/login.html");
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// socket
+// SOCKET
 io.on("connection", (socket) => {
-  console.log("🟢 Conectado:", socket.id);
+  console.log("🟢 Socket conectado:", socket.id);
 
-  socket.on("hud:update", (payload) => {
-    io.emit(`hud:${payload.id}`, payload.data);
+  socket.on("hud:update", ({ id, data }) => {
+    io.emit(`hud:${id}`, data);
   });
 
   socket.on("disconnect", () => {
-    console.log("🔴 Desconectado:", socket.id);
+    console.log("🔴 Socket saiu:", socket.id);
   });
 });
 
 server.listen(PORT, () => {
-  console.log(`🔥 Rodando na porta ${PORT}`);
+  console.log("🔥 Server rodando na porta", PORT);
 });
