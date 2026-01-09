@@ -1,31 +1,48 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>HUD</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<div id="hud">
-  <div id="avatarHud">
-    <div id="levelHud"></div>
-  </div>
-
-  <div id="hudInfo">
-    <div id="name"></div>
-
-    <div id="vidaText"></div>
-    <div class="bar-container" id="vidaBar">
-      <div class="bar vida" id="vidaFill"></div>
-    </div>
-
-    <div id="manaText"></div>
-    <div id="diceContainer"></div>
-  </div>
-</div>
-
 <script src="/socket.io/socket.io.js"></script>
-<script src="hud.js"></script>
-</body>
-</html>
+<script>
+console.log("HUD carregado");
+
+const socket = io();
+
+const params = new URLSearchParams(window.location.search);
+const hudId = params.get("hud") || "leafone";
+
+socket.emit("join", hudId);
+
+socket.on("connect", () => {
+  console.log("Conectado ao socket:", socket.id);
+});
+
+socket.on("hudUpdate", s => {
+  console.log("HUD UPDATE:", s);
+
+  document.getElementById("name").innerText = s.name ?? "";
+  document.getElementById("levelHud").innerText = s.level ?? "";
+
+  document.getElementById("vidaText").innerText =
+    `${s.vidaAtual}/${s.vidaMax}`;
+
+  document.getElementById("manaText").innerText =
+    `${s.manaAtual}/${s.manaMax}`;
+
+  const vidaBar = document.getElementById("vidaBar");
+  const vidaFill = document.getElementById("vidaFill");
+
+  vidaBar.style.display = s.showVidaBar ? "block" : "none";
+  vidaFill.style.width =
+    `${(s.vidaAtual / s.vidaMax) * 100}%`;
+
+  const diceContainer = document.getElementById("diceContainer");
+  diceContainer.innerHTML = "";
+
+  if (s.dice?.rolls) {
+    s.dice.rolls.forEach(v => {
+      const d = document.createElement("div");
+      d.className = "diceHex";
+      d.textContent = v;
+      diceContainer.appendChild(d);
+    });
+  }
+});
+</script>
+
