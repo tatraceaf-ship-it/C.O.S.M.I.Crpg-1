@@ -5,10 +5,15 @@ const io = require("socket.io")(http);
 
 app.use(express.static("public"));
 
+app.get("/", (req, res) => {
+  res.redirect("/login.html");
+});
+
 io.on("connection", socket => {
 
   socket.on("join", id => {
     socket.join(id);
+    console.log("Entrou no HUD:", id);
   });
 
   socket.on("updateHud", data => {
