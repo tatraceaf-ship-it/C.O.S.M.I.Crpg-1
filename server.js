@@ -1,25 +1,22 @@
 const express = require("express");
 const app = express();
 const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const { Server } = require("socket.io");
+const io = new Server(http);
 
 app.use(express.static("public"));
 
-app.get("/", (req, res) => {
-  res.redirect("/controller.html");
-});
-
 io.on("connection", socket => {
-  console.log("Socket conectado:", socket.id);
+  console.log("Conectado:", socket.id);
 
-  socket.on("join", hudId => {
-    console.log("Entrou no HUD:", hudId);
+  socket.on("joinHud", hudId => {
     socket.join(hudId);
+    console.log("HUD entrou na sala:", hudId);
   });
 
   socket.on("updateHud", data => {
-    console.log("Update HUD:", data.id);
-    io.to(data.id).emit("hudUpdate", data);
+    if (!data.hudId) return;
+    io.to(data.hudId).emit("hudUpdate", data);
   });
 });
 
