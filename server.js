@@ -1,29 +1,28 @@
-const express = require("express");
-const app = express();
-const http = require("http").createServer(app);
-const io = require("socket.io")(http);
+const socket = io();
 
-app.use(express.static("public"));
+function aplicarHUD() {
+  socket.emit("updateHud", {
+    hudId: "leafone",
 
-app.get("/", (req, res) => {
-  res.redirect("/controller.html");
-});
+    name: document.getElementById("nome").value,
+    level: document.getElementById("nivel").value,
 
-io.on("connection", socket => {
-  console.log("Socket conectado:", socket.id);
+    vidaAtual: document.getElementById("vidaAtual").value,
+    vidaMax: document.getElementById("vidaMax").value,
 
-  socket.on("join", hudId => {
-    console.log("Entrou no HUD:", hudId);
-    socket.join(hudId);
+    manaAtual: document.getElementById("manaAtual").value,
+    manaMax: document.getElementById("manaMax").value,
+
+    showVidaBar: true,
+    dice: { rolls: [] }
   });
+}
 
-  socket.on("updateHud", data => {
-    console.log("Update HUD:", data.id);
-    io.to(data.id).emit("hudUpdate", data);
+function rolarDado() {
+  const r = Math.floor(Math.random() * 20) + 1;
+
+  socket.emit("updateHud", {
+    hudId: "leafone",
+    dice: { rolls: [r] }
   });
-});
-
-const PORT = process.env.PORT || 3000;
-http.listen(PORT, () => {
-  console.log("Servidor rodando na porta", PORT);
-});
+}
